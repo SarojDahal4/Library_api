@@ -1,11 +1,15 @@
+import token
 from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework.response  import Response
 from rest_framework import generics, status, serializers
-from rest_framework.decorators import  api_view
+from rest_framework.decorators import  api_view, authentication_classes, permission_classes
 from.models import Author, Books
 from .serializers import AuthorSerializer, BooksSerializer, UserSerializer
 from rest_framework.authtoken.models import Token
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
@@ -17,8 +21,10 @@ from django.shortcuts import get_object_or_404
 
 # created using viewset
 
-    
+   
+   
 class BooksListCreate(generics.ListCreateAPIView):
+    
     queryset = Books.objects.all()
     serializer_class = BooksSerializer
     
@@ -74,6 +80,11 @@ def signup(request):
     return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST) 
 
 
+
+
 @api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def test_token(request):
-    return Response({})
+    return Response({'detail': 'You are authenticated'})
+    print('you are here as token authentication')
