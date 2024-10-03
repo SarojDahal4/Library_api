@@ -1,0 +1,79 @@
+from django.shortcuts import render
+from django.http import JsonResponse
+from rest_framework.response  import Response
+from rest_framework import generics, status, serializers
+from rest_framework.decorators import  api_view
+from.models import Author, Books
+from .serializers import AuthorSerializer, BooksSerializer, UserSerializer
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
+
+# Create your views here.
+
+# create you view using app view
+
+
+
+# created using viewset
+
+    
+class BooksListCreate(generics.ListCreateAPIView):
+    queryset = Books.objects.all()
+    serializer_class = BooksSerializer
+    
+
+class Booksdetails(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Books.objects.all()
+    serializer_class = BooksSerializer
+    
+class AuthorListCreate(generics.ListCreateAPIView):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+    
+    
+class Authordetails(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+    
+    
+# authentication  
+
+
+@api_view(['POST'])
+def login(request):
+   # requesting a data and password also storing it in variables
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    if not username or not password:
+        return Response({'detail': 'Username and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = get_object_or_404(User, username=username)
+    if not user.check_password(password):
+        return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    token, created = Token.objects.get_or_create(user=user)
+    serializer = UserSerializer(instance=user)
+    
+    return Response({'token': token.key, 'user': serializer.data})
+
+
+@api_view(['POST'])
+def signup(request):
+    serializers = UserSerializer(data=request.data)
+    if serializers.is_valid():
+        serializers.save()
+        user = User.objects.get(username=request.data['username'])
+        user.set_password(request.data['password'])
+        user.save()
+        token = Token.objects.create(user=user)
+        return Response ({'token':token.key,"user": serializers.data})
+        
+    
+    return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST) 
+
+
+@api_view(['GET'])
+def test_token(request):
+    return Response({})
