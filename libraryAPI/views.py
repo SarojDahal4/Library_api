@@ -16,31 +16,69 @@ from django.shortcuts import get_object_or_404
 # Create your views here.
 
 # create you view using app view
+@api_view(['POST'])
+def book(request):
+    serializers = BooksSerializer(data=request.data)
+    if serializers.is_valid():
+        serializers.save()
+        return Response(serializers.data, status=status.HTTP_201_CREATED)
+    return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['GET'])
+def book_detail(request):
+    objs = Books.objects.get.all()
+    serializers = BooksSerializer.objects(objs, many=True)
+    return Response(serializers.data)
+
+@api_view(['PUT','PATCH'])
+def book_update(request):
+    data = request.data
+    if request.method == 'PUT':
+        serializers = BooksSerializer(data=data)
+        if serializers.is_valid():
+            serializers.save()
+            return Response(serializers.data, status=status.HTTP_200_OK)
+        return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    else:
+        data = request.data
+        serializers = BooksSerializer(data=data, partial=True)
+        if serializers.is_valid():
+            serializers.save()
+            return Response(serializers.data, status=status.HTTP_200_OK)
+        return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE '])
+def book_delete(request):
+    data = request.data
+    ojs = Books.objects.get(id=data['id'])
+    ojs.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # created using viewset
 
    
    
-class BooksListCreate(generics.ListCreateAPIView):
-    
-    queryset = Books.objects.all()
-    serializer_class = BooksSerializer
+# class BooksListCreate(generics.ListCreateAPIView):
+   
+#    queryset = Books.objects.all()
+#    serializer_class = BooksSerializer
     
 
-class Booksdetails(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Books.objects.all()
-    serializer_class = BooksSerializer
+# class Booksdetails(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = Books.objects.all()
+#     serializer_class = BooksSerializer
     
-class AuthorListCreate(generics.ListCreateAPIView):
-    queryset = Author.objects.all()
-    serializer_class = AuthorSerializer
+# class AuthorListCreate(generics.ListCreateAPIView):
+#    queryset = Author.objects.all()
+#    serializer_class = AuthorSerializer
     
     
-class Authordetails(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Author.objects.all()
-    serializer_class = AuthorSerializer
+# class Authordetails(generics.RetrieveUpdateDestroyAPIView):
+#    queryset = Author.objects.all()
+#    serializer_class = AuthorSerializer
     
     
 # authentication  
@@ -67,7 +105,8 @@ def login(request):
 
 @api_view(['POST'])
 def signup(request):
-    serializers = UserSerializer(data=request.data)
+    data = request.data
+    serializers = UserSerializer(data=data)
     if serializers.is_valid():
         serializers.save()
         user = User.objects.get(username=request.data['username'])
@@ -87,4 +126,4 @@ def signup(request):
 @permission_classes([IsAuthenticated])
 def test_token(request):
     return Response({'detail': 'You are authenticated'})
-    print('you are here as token authentication')
+    
